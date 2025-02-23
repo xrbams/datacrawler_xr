@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cd build
-rm -rf *
+rm -rf build
+mkdir build && cd build
 
 cmake ..
 make 
-./git_b
+./Dunna
 

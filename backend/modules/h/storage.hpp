@@ -1,5 +1,9 @@
-#include <iostream>
+#ifndef STORAGE_HPP
+#define STORAGE_HPP
 
+#include <iostream>
 using namespace std;
 
-static void getstorage();
+void getstorage(); 
+
+#endif

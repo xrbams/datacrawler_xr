@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(git_b LANGUAGES C CXX)
+project(Dunna LANGUAGES C CXX)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -13,15 +13,21 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Add the include directories
-include_directories(include)
+include_directories(modules/h src)
 
-# Add executable and source files
-set(SOURCES
-    main.cpp
-)
+# Add source files
+file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  # ✅ Search for .cpp files
+file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp)  # ✅ Search for headers
+
+# Print debugging information to ensure files are found
+# message(STATUS "Found source files: ${MODULE_SOURCES}")
+# message(STATUS "Found header files: ${MODULE_HEADERS}")
+
+# Set the sources for the executable
+set(SOURCES ${MODULE_SOURCES} ${MODULE_HEADERS} main.cpp)
 
 # Add executable and link C and C++ sources
-add_executable(git_b ${SOURCES})
+add_executable(Dunna ${SOURCES})
 
 # Output binary into build/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
