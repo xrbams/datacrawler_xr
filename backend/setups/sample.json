@@ -1,0 +1,23 @@
+{
+    "url": "https://example.com",
+    "status": 200,
+    "timestamp": "2025-02-23T15:30:00Z",
+    "headers": {
+      "Content-Type": "text/html",
+      "Content-Length": 12567
+    },
+    "content": {
+      "title": "Example Title",
+      "meta_description": "This is an example page for testing.",
+      "text": "This is the extracted body text of the webpage...",
+      "links": [
+        "https://example.com/about",
+        "https://example.com/contact"
+      ]
+    },
+    "crawl_metadata": {
+      "depth": 1,
+      "parent_url": "https://example.com/start",
+      "crawled_at": "2025-02-23T15:32:00Z"
+    }
+  }

@@ -12,7 +12,15 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(BSONCXX REQUIRED libbsoncxx)
+pkg_check_modules(MONGOCXX REQUIRED libmongocxx)
+
+include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS})
+link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS})
+
 # Add the include directories
+include_directories("/usr/local/include")
 include_directories(modules/h src)
 
 # Add source files
@@ -21,7 +29,7 @@ file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp
 
 # Print debugging information to ensure files are found
 # message(STATUS "Found source files: ${MODULE_SOURCES}")
-# message(STATUS "Found header files: ${MODULE_HEADERS}")
+# message(STATUS "Found header files: ${MODULE_HEADERS}") LmVniuYFmyMpVbGF
 
 # Set the sources for the executable
 set(SOURCES ${MODULE_SOURCES} ${MODULE_HEADERS} main.cpp)
