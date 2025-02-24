@@ -37,5 +37,8 @@ set(SOURCES ${MODULE_SOURCES} ${MODULE_HEADERS} main.cpp)
 # Add executable and link C and C++ sources
 add_executable(Dunna ${SOURCES})
 
+# Explicitly link the libraries
+target_link_libraries(Dunna ${BSONCXX_LIBRARIES} ${MONGOCXX_LIBRARIES})
+
 # Output binary into build/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
