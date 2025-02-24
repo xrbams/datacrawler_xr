@@ -15,6 +15,7 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(BSONCXX REQUIRED libbsoncxx)
 pkg_check_modules(MONGOCXX REQUIRED libmongocxx)
+pkg_check_modules(CURL REQUIRED libcurl)
 
 include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS})
 link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS})
@@ -23,8 +24,12 @@ link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS})
 include_directories("/usr/local/include")
 include_directories(modules/h src)
 
-# Add source files
-file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  # ✅ Search for .cpp files
+# Add source files # ✅ Search for .cpp files
+file(GLOB_RECURSE MODULE_SOURCES modules/module_a/*.cpp modules/module_a/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES modules/module_b/*.cpp modules/module_b/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES modules/module_c/*.cpp modules/module_c/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES modules/module_d/*.cpp modules/module_d/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  
 file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp)  # ✅ Search for headers
 
 # Print debugging information to ensure files are found
