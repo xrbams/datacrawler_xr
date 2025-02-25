@@ -15,10 +15,13 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(BSONCXX REQUIRED libbsoncxx)
 pkg_check_modules(MONGOCXX REQUIRED libmongocxx)
-pkg_check_modules(CURL REQUIRED libcurl)
+pkg_check_modules(GUMBO REQUIRED gumbo)
+#pkg_check_modules(CURL REQUIRED libcurl)
+find_package(CURL REQUIRED)
+# find_package(GUMBO REQUIRED)
 
-include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS})
-link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS})
+include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${GUMBO_LIBRARY_DIRS})
+link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS} ${GUMBO_LIBRARY_DIRS})
 
 # Add the include directories
 include_directories("/usr/local/include")
@@ -43,7 +46,7 @@ set(SOURCES ${MODULE_SOURCES} ${MODULE_HEADERS} main.cpp)
 add_executable(Dunna ${SOURCES})
 
 # Explicitly link the libraries
-target_link_libraries(Dunna ${BSONCXX_LIBRARIES} ${MONGOCXX_LIBRARIES})
+target_link_libraries(Dunna ${BSONCXX_LIBRARIES} ${MONGOCXX_LIBRARIES} ${CURL_LIBRARIES} ${GUMBO_LIBRARIES})
 
 # Output binary into build/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
