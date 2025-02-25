@@ -1,3 +1,6 @@
+#ifndef METADATA_H
+#define METADATA_H
+
 #include <iostream>
 #include <vector>
 #include <memory>
@@ -45,6 +48,10 @@ public:
     Metadata(std::unique_ptr<Header> h, std::unique_ptr<Content> c, std::unique_ptr<CrawlMetadata> cm)
     : header(std::move(h)), content(std::move(c)), crawl(std::move(cm)) {}
     ~Metadata();
+    
+    Header parse_header(const std::string& html);
+    Content parse_content(const std::string& html);
+    CrawlMetadata parse_metadata(const std::string& html);
 
     // Display function (For Debugging)
     void display() const {
@@ -65,3 +72,5 @@ public:
 
 Metadata::Metadata() {}
 Metadata::~Metadata() {}
+
+#endif

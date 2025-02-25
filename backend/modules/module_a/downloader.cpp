@@ -20,7 +20,6 @@ Multithreading: std::thread, std::async, or Boost.Thread.
 #include <sstream>
 #include <memory>
 #include <curl/curl.h>
-#include <gumbo.h>
 
 // include built functions
 #include "metadata.cpp"
@@ -57,12 +56,12 @@ public:
 
     ~Downloader();
 
-    bool fetch() {
+    string fetch() {
         CURL* curl = curl_easy_init();
 
         if(!curl) {
             std::cerr << "Failed to initialize CURL \n"; 
-            return false;
+            return;
         }
         auto res_data = make_unique<string>();
 
@@ -76,7 +75,7 @@ public:
         {
             std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
             curl_easy_cleanup(curl);
-            return false;
+            return;
         }
 
         //std::cout << "\nFull Response:\n" << *res_data << std::endl;
@@ -85,7 +84,7 @@ public:
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
         curl_easy_cleanup(curl);
 
-        return true;
+        return *res_data;
     }
 
     // Getters
