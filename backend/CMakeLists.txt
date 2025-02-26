@@ -35,7 +35,8 @@ file(GLOB_RECURSE MODULE_SOURCES modules/module_d/*.cpp modules/module_d/*.hpp)
 file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  
 file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp)  # ✅ Search for headers
 
-# Print debugging information to ensure files are found
+# Print debugging information
+message(STATUS "Sources: ${MODULE_SOURCES}")
 # message(STATUS "Found source files: ${MODULE_SOURCES}")
 # message(STATUS "Found header files: ${MODULE_HEADERS}") LmVniuYFmyMpVbGF
 

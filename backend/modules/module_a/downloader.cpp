@@ -61,7 +61,7 @@ public:
 
         if(!curl) {
             std::cerr << "Failed to initialize CURL \n"; 
-            return;
+            return "";
         }
         auto res_data = make_unique<string>();
 
@@ -75,7 +75,7 @@ public:
         {
             std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
             curl_easy_cleanup(curl);
-            return;
+            return "";
         }
 
         //std::cout << "\nFull Response:\n" << *res_data << std::endl;
