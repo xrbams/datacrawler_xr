@@ -1,110 +1,115 @@
-//Multi-threaded Downloader
+#include "downloader.hpp"
 
-/*
+Downloader::~Downloader(){
+    stop = true;
+    for (auto & w : workers){
+        if (w.joinable()) w.join();
+    }
+    
+}
 
-- downloads webpages from URLs
-- Parse HTML
-- send extracted links to module_c
-- handles robot.txt and site-specific rate limits
-
-Networking: libcurl or Boost.Asio (asynchronous networking).
-Parsing: Gumbo, libxml2, or HTML Tidy.
-Multithreading: std::thread, std::async, or Boost.Thread.
-
-*/
-// include libraries
-#include <iostream>
-#include <string>
-#include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <memory>
-#include <curl/curl.h>
-
-// include built functions
-#include "metadata.cpp"
-
-using namespace std;
-
-/*
-- Fetching Content
-- handling status codes
-- returning data.
-*/
-class Downloader
-{
-private:
-std::string url = "";
-int status_code;
-std::string timestamp; // timestamp use time
-Metadata data_struct;
-
-// CURL callback function (not storing content yet)
 static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* userdata){
     size_t t_size = size * nmemb;
     unique_ptr<string>* response = static_cast<std::unique_ptr<std::string>*>(userdata);
     response->get()->append(static_cast<char*>(ptr), t_size); // store data
 
-    //std::cout << "Received Data Chunk: " 
-           // << std::string(static_cast<char*>(ptr), t_size) << std::endl;
-
-    return t_size; // Tell CURL how much we processed
+    return t_size; 
 }
+
+void Downloader::enqueueUrl(const string& url) {
+    url_queue.push(url);
+    if (!url_queue.empty())
+    {
+        auto stuff = url_queue.peek();
+        cout << "Theres Stuff in here: " << stuff.value() << endl;
+    }
+}
+
+void Downloader::start(int num){
+    for (int i = 0; i < num; ++i)
+    {
+        workers.emplace_back(&Downloader::worker, this);
+    }
     
-public:
-    explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()) {}
+}
 
-    ~Downloader();
+void Downloader::worker(){
+    while (!stop)
+    {
+        string url_r;
+        if(url_queue.pop(url)) {
+            CURL* curl = curl_easy_init();
+            if (!curl) continue;
 
-    string fetch() {
-        CURL* curl = curl_easy_init();
+            std::string html = fetch(); //url
 
-        if(!curl) {
-            std::cerr << "Failed to initialize CURL \n"; 
-            return "";
+            if (!html.empty()) {
+                std::cout << "Downloaded: " << url << std::endl;
+            }else {
+                std::cerr << "Failed to download: " << url << std::endl;
+            }
+
+
         }
-        auto res_data = make_unique<string>();
+    }
+}
 
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); // specify URL, change it to const char*
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // Follow redirects for SSL/TLS handshake
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback); // collect response
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res_data);
+string Downloader::fetch() { //const std::string& url
+    cout << "Getting:  " << url << endl;
+    CURL* curl = curl_easy_init();
 
-        CURLcode res = curl_easy_perform(curl);
-        if (res != CURLE_OK)
-        {
-            std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
-            curl_easy_cleanup(curl);
-            return "";
-        }
+    if(!curl) {
+        std::cerr << "Failed to initialize CURL \n"; 
+        return "";
+    }
+    auto res_data = make_unique<string>();
 
-        //std::cout << "\nFull Response:\n" << *res_data << std::endl;
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); // specify URL, change it to const char*
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // Follow redirects for SSL/TLS handshake
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback); // collect response
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res_data);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
-        // Get HTTP status code
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
+    // int max_retries = 3;
+    // int attempts = 0;
+    // CURLcode res;
+
+    // do {
+    //     res = curl_easy_perform(curl);
+    //     if (res != CURLE_OK) {
+    //         std::cerr << "Attempt " << (attempts + 1) << " failed: " 
+    //                   << curl_easy_strerror(res) << "\n";
+    //     }
+    //     attempts++;
+    // } while (res != CURLE_OK && attempts < max_retries);
+
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+        std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
         curl_easy_cleanup(curl);
-
-        return *res_data;
+        return "";
     }
 
-    // Getters
-    std::string getUrl() const { return url; }
-    int getStatusCode() const { return status_code; }
-    std::string getTimestamp() const { return timestamp; }
+    //std::cout << "\nFull Response:\n" << *res_data << std::endl;
 
-    // Static method to get current timestamp
-    static std::string getCurrentTimestamp() {
+    // Get HTTP status code
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
+    curl_easy_cleanup(curl);
+
+    if (status_code != 200) {
+        std::cerr << "HTTP error: " << status_code << " for " << url << "\n";
+        return "";
+    }
+
+    return *res_data;
+}
+
+string Downloader::getCurrentTimestamp() {
         auto now = std::chrono::system_clock::now();
         std::time_t now_c = std::chrono::system_clock::to_time_t(now);
         std::ostringstream oss;
         oss << std::put_time(std::gmtime(&now_c), "%Y-%m-%dT%H:%M:%SZ"); // ISO 8601
         return oss.str();
-    }
-
-
-};
-
-
-Downloader::~Downloader()
-{
 }
+

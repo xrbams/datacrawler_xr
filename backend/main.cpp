@@ -1,30 +1,42 @@
-#include "modules/module_a/downloader.cpp"
-#include "modules/module_a/metadata.hpp"
+#include "modules/module_a/downloader.hpp"
+// #include "modules/module_a/metadata.hpp"
+#include "modules/module_a/parser.hpp"
 
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
     cout << "This is my first go at Concurrent Web Crawler" << endl;
-    Downloader d("https://www.google.com");
-    string html = d.fetch();
+    string url = "";
+    Downloader d; //(url)
+    d.start(4);
+
+    d.enqueueUrl("https://www.youtube.com");
+    d.enqueueUrl("https://www.google.com");
+    d.enqueueUrl("https://www.neetcode.io");
+
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     
+    while (d.hasResults()){
 
-    if(!html.empty()){
-        cout << "URL: " << d.getUrl() << endl;
-        cout << "Status: " << d.getStatusCode() << endl;
-        cout << "Crawled At: " << d.getTimestamp() << endl;
+        auto [html, url] = d.getResult();
         
-        Metadata data;
-        Content cont = data.parse_content(html);
+        if(!html.empty()){
+            cout << "URL: " << d.getUrl() << endl;
+            cout << "Status: " << d.getStatusCode() << endl;
+            cout << "Crawled At: " << d.getTimestamp() << endl;
+            
+            Content cont = Parser::parse_content(html, url);
 
-        std::cout << "Title: " << cont.title << std::endl;
-        std::cout << "Meta Description: " << cont.meta_description << std::endl;
-        std::cout << "Extracted Links: " << std::endl;
-        for (const auto& link : cont.links) {
-            std::cout << "  - " << link << std::endl;
+            auto header = std::make_unique<Header>("text/html", html.length());
+            auto content = std::make_unique<Content>(cont);
+            auto crawl = std::make_unique<CrawlMetadata>(0, d.getUrl(), d.getTimestamp());
+            Metadata meta(std::move(header), std::move(content), std::move(crawl));
+
+            meta.display();
+
         }
     }
-    //getstorage();
+
     return 0;
 }

@@ -1,3 +1,4 @@
+// metadata.hpp
 #ifndef METADATA_H
 #define METADATA_H
 
@@ -42,39 +43,25 @@ class Metadata
 private:
     std::unique_ptr<Header> header;
     std::unique_ptr<Content> content;
-    CrawlMetadata crawl;
+    std::unique_ptr<CrawlMetadata> crawl;
     
 public:
     Metadata()
         : header(std::make_unique<Header>("", 0)),
           content(std::make_unique<Content>("", "", "", std::vector<std::string>())) {}
 
-    Metadata(std::unique_ptr<Header> h, std::unique_ptr<Content> c, CrawlMetadata cm)
+    Metadata(std::unique_ptr<Header> h, std::unique_ptr<Content> c, std::unique_ptr<CrawlMetadata> cm)
         : header(std::move(h)), content(std::move(c)), crawl(std::move(cm)) {}
     ~Metadata() = default;
     
-    Header parse_header(const std::string& html);
-    Content parse_content(const std::string& html);
-    CrawlMetadata parse_metadata(const std::string& html);
-
-    // Display function (For Debugging)
-    // void display() const {
-    //     std::cout << "Header:\n  Content-Type: " << header->content_type
-    //               << "\n  Content-Length: " << header->content_length << "\n";
-
-    //     std::cout << "Content:\n  Title: " << content->title
-    //               << "\n  Meta Description: " << content->meta_description
-    //               << "\n  Text Snippet: " << content->text.substr(0, 50) << "...\n  Links:\n";
-    //     for (const auto& link : content->links)
-    //         std::cout << "    " << link << "\n";
-
-    //     std::cout << "Crawl Metadata:\n  Depth: " << crawl->depth
-    //               << "\n  Parent URL: " << crawl->parent_url
-    //               << "\n  Crawled At: " << crawl->crawled_at << "\n";
-    // }
+    void display() const {
+        std::cout << "Title: " << content->title << "\n";
+        std::cout << "Description: " << content->meta_description << "\n";
+        std::cout << "Links: ";
+        for (const auto& link : content->links) {
+            std::cout << "  - " << link << std::endl;
+        }
+    }
 };
-
-// Metadata::Metadata(){}
-// Metadata::~Metadata(){}
 
 #endif

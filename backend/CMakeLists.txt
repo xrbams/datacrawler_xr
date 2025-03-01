@@ -28,20 +28,26 @@ include_directories("/usr/local/include")
 include_directories(modules/h src)
 
 # Add source files # ✅ Search for .cpp files
-file(GLOB_RECURSE MODULE_SOURCES modules/module_a/*.cpp modules/module_a/*.hpp)
-file(GLOB_RECURSE MODULE_SOURCES modules/module_b/*.cpp modules/module_b/*.hpp)
-file(GLOB_RECURSE MODULE_SOURCES modules/module_c/*.cpp modules/module_c/*.hpp)
-file(GLOB_RECURSE MODULE_SOURCES modules/module_d/*.cpp modules/module_d/*.hpp)
-file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  
+file(GLOB_RECURSE MODULE_SOURCES_A modules/module_a/*.cpp modules/module_a/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES_B modules/module_b/*.cpp modules/module_b/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES_C modules/module_c/*.cpp modules/module_c/*.hpp)
+file(GLOB_RECURSE MODULE_SOURCES_D modules/module_d/*.cpp modules/module_d/*.hpp)
+# file(GLOB_RECURSE MODULE_SOURCES modules/src/*.cpp src/*.cpp)  
 file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp)  # ✅ Search for headers
 
 # Print debugging information
-message(STATUS "Sources: ${MODULE_SOURCES}")
-# message(STATUS "Found source files: ${MODULE_SOURCES}")
-# message(STATUS "Found header files: ${MODULE_HEADERS}") LmVniuYFmyMpVbGF
+# message(STATUS "Sources: ${MODULE_SOURCES}")
+# message(STATUS "Found source files: ${MODULE_SOURCES_A}")
+ #LmVniuYFmyMpVbGF
 
 # Set the sources for the executable
-set(SOURCES ${MODULE_SOURCES} ${MODULE_HEADERS} main.cpp)
+set(SOURCES 
+${MODULE_SOURCES_A} 
+#${MODULE_SOURCES_B}
+#${MODULE_SOURCES_C} 
+#${MODULE_SOURCES_D} 
+${MODULE_HEADERS} 
+main.cpp)
 
 # Add executable and link C and C++ sources
 add_executable(Dunna ${SOURCES})
