@@ -18,7 +18,7 @@ pkg_check_modules(MONGOCXX REQUIRED libmongocxx)
 pkg_check_modules(GUMBO REQUIRED gumbo)
 #pkg_check_modules(CURL REQUIRED libcurl)
 find_package(CURL REQUIRED)
-# find_package(GUMBO REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${GUMBO_LIBRARY_DIRS})
 link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS} ${GUMBO_LIBRARY_DIRS})
@@ -43,8 +43,8 @@ file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp
 # Set the sources for the executable
 set(SOURCES 
 ${MODULE_SOURCES_A} 
-#${MODULE_SOURCES_B}
-#${MODULE_SOURCES_C} 
+${MODULE_SOURCES_B}
+##${MODULE_SOURCES_C} 
 #${MODULE_SOURCES_D} 
 ${MODULE_HEADERS} 
 main.cpp)
@@ -53,7 +53,13 @@ main.cpp)
 add_executable(Dunna ${SOURCES})
 
 # Explicitly link the libraries
-target_link_libraries(Dunna ${BSONCXX_LIBRARIES} ${MONGOCXX_LIBRARIES} ${CURL_LIBRARIES} ${GUMBO_LIBRARIES})
+target_link_libraries(Dunna 
+    ${BSONCXX_LIBRARIES} 
+    ${MONGOCXX_LIBRARIES} 
+    ${CURL_LIBRARIES} 
+    ${GUMBO_LIBRARIES}
+    nlohmann_json::nlohmann_json
+    )
 
 # Output binary into build/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

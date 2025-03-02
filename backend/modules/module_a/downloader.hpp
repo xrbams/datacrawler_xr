@@ -28,6 +28,8 @@ Multithreading: std::thread, std::async, or Boost.Thread.
 #include <queue>
 
 #include "../module_c/queue.hpp"
+#include "../module_b/serializer.hpp"
+#include "../module_b/storage.hpp"
 
 using namespace std;
 
@@ -61,7 +63,7 @@ public:
     void enqueueUrl(const string& url);
     void start(int num);
     void worker();
-    
+
     // for debugging purposes
     bool hasResults() { 
         std::lock_guard<std::mutex> lock(resultsMutex);

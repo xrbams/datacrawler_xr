@@ -1,5 +1,43 @@
 #include "storage.hpp"
 
+mongocxx::instance Database::instance{};
+mongocxx::client Database::conn{ mongocxx::uri{"mongodb+srv://xrbams:LmVniuYFmyMpVbGF@xrbams.ni6ob.mongodb.net/?retryWrites=true&w=majority&appName=xrbams"} };
+
+Database::Database() : db(conn["datacrawler_xr"]) {}
+
+void Database::saveData(const json& data){
+    try{
+
+        auto collection = db["crawled_data"];
+        bsoncxx::document::value doc = bsoncxx::from_json(data.dump());
+        collection.insert_one(doc.view());
+
+    }catch(const std::exception& e){
+        std::cerr << "MongoDB Error (saveData): " << e.what() << '\n';
+    }
+    
+}
+
+void Database::saveLink(const std::string& url, const std::string& parentUrl) {
+    try
+    {
+        auto collection = db["crawled_links"];
+        json linkData = {
+            {"url", url},
+            {"parent_url", parentUrl},
+            {"discovered_at", Downloader::getCurrentTimestamp()}
+        };
+        bsoncxx::document::value doc = bsoncxx::from_json(linkData.dump());
+        collection.insert_one(doc.view());
+    }catch(const std::exception& e){
+        std::cerr << "MongoDB Error (saveLink): " << e.what() << '\n';
+    }
+}
+
+
+
+
+/*
 void getstorage() {
     try
     {
@@ -24,4 +62,4 @@ void getstorage() {
         std::cout<< "Exception: " << e.what() << std::endl;
     }
 
-}
+} */

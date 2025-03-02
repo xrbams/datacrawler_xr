@@ -53,6 +53,11 @@ public:
     Metadata(std::unique_ptr<Header> h, std::unique_ptr<Content> c, std::unique_ptr<CrawlMetadata> cm)
         : header(std::move(h)), content(std::move(c)), crawl(std::move(cm)) {}
     ~Metadata() = default;
+
+    // 🔥 Add Getters
+    const Header* getHeader() const { return header.get(); }
+    const Content* getContent() const { return content.get(); }
+    const CrawlMetadata* getCrawlMetadata() const { return crawl.get(); }
     
     void display() const {
         std::cout << "Title: " << content->title << "\n";

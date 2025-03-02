@@ -16,6 +16,8 @@ static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* userdata
     return t_size; 
 }
 
+// this right now gets triggered in main, 
+// but ideally we want the scheduler to handle this.
 void Downloader::enqueueUrl(const string& url) {
     url_queue.push(url);
 }
@@ -29,6 +31,8 @@ void Downloader::start(int num){
 }
 
 void Downloader::worker(){
+    // call storage instance
+    Database db;
     while (!stop)
     {
         string url;
@@ -42,7 +46,23 @@ void Downloader::worker(){
                 std::cout << "Downloaded: " << url << std::endl;
                 // 🔥 Store the result in a queue
                 std::lock_guard<std::mutex> lock(resultsMutex);
-                results.push({url, html}); 
+                results.push({url, html});
+
+                Content content = Parser::parse_content(html, url);
+
+                auto header = std::make_unique<Header>("text/html", html.length());
+                auto crawl = std::make_unique<CrawlMetadata>(0, url, getCurrentTimestamp());
+                Metadata meta(std::move(header), std::make_unique<Content>(content), std::move(crawl));
+
+                json jsonData = serializer::serialize(meta);
+                db.saveData(jsonData);
+
+                // 🔥 Save extracted links to MongoDB and enqueue them
+                for (const std::string& link : content.links) {
+                    db.saveLink(link, url);  // Store link in MongoDB
+                    url_queue.push(link);    // Add link to queue for crawling
+                }
+
             }else {
                 std::cerr << "Failed to download: " << url << std::endl;
             }

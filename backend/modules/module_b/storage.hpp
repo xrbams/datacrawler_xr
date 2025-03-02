@@ -16,9 +16,30 @@
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
+#include <nlohmann/json.hpp>
+
+#include "../module_a/downloader.hpp"
 
 using namespace std;
+using json = nlohmann::json;
+using namespace mongocxx;
 
-void getstorage(); 
+
+//void getstorage();
+
+class Database
+{
+private:
+    static mongocxx::instance instance;  // ✅ Singleton MongoDB instance
+    static mongocxx::client conn;        // ✅ Persistent client connection
+    mongocxx::database db;
+public:
+    Database();
+    ~Database()  = default;
+
+    void saveData(const json& data);
+    void saveLink(const std::string& url, const std::string& parentUrl);
+};
 
 #endif

@@ -1,6 +1,7 @@
 #include "modules/module_a/downloader.hpp"
 // #include "modules/module_a/metadata.hpp"
 #include "modules/module_a/parser.hpp"
+#include "modules/module_b/serializer.hpp"
 
 using namespace std;
 
