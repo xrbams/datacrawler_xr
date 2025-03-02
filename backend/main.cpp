@@ -19,10 +19,10 @@ int main(int argc, char const *argv[])
     
     while (d.hasResults()){
 
-        auto [html, url] = d.getResult();
-        
+        auto [url, html] = d.getResult();
+
         if(!html.empty()){
-            cout << "URL: " << d.getUrl() << endl;
+            cout << "URL: " << url << endl;
             cout << "Status: " << d.getStatusCode() << endl;
             cout << "Crawled At: " << d.getTimestamp() << endl;
             
@@ -30,12 +30,11 @@ int main(int argc, char const *argv[])
 
             auto header = std::make_unique<Header>("text/html", html.length());
             auto content = std::make_unique<Content>(cont);
-            auto crawl = std::make_unique<CrawlMetadata>(0, d.getUrl(), d.getTimestamp());
+            auto crawl = std::make_unique<CrawlMetadata>(0, url, d.getTimestamp());
             Metadata meta(std::move(header), std::move(content), std::move(crawl));
 
             meta.display();
-
-        }
+        } 
     }
 
     return 0;

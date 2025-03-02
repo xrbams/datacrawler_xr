@@ -18,11 +18,6 @@ static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* userdata
 
 void Downloader::enqueueUrl(const string& url) {
     url_queue.push(url);
-    if (!url_queue.empty())
-    {
-        auto stuff = url_queue.peek();
-        cout << "Theres Stuff in here: " << stuff.value() << endl;
-    }
 }
 
 void Downloader::start(int num){
@@ -36,15 +31,18 @@ void Downloader::start(int num){
 void Downloader::worker(){
     while (!stop)
     {
-        string url_r;
+        string url;
         if(url_queue.pop(url)) {
             CURL* curl = curl_easy_init();
             if (!curl) continue;
 
-            std::string html = fetch(); //url
+            std::string html = fetch(url); //url
 
             if (!html.empty()) {
                 std::cout << "Downloaded: " << url << std::endl;
+                // 🔥 Store the result in a queue
+                std::lock_guard<std::mutex> lock(resultsMutex);
+                results.push({url, html}); 
             }else {
                 std::cerr << "Failed to download: " << url << std::endl;
             }
@@ -54,8 +52,7 @@ void Downloader::worker(){
     }
 }
 
-string Downloader::fetch() { //const std::string& url
-    cout << "Getting:  " << url << endl;
+string Downloader::fetch(const std::string& url) { //
     CURL* curl = curl_easy_init();
 
     if(!curl) {

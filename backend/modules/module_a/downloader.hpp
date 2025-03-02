@@ -25,6 +25,7 @@ Multithreading: std::thread, std::async, or Boost.Thread.
 #include <iomanip>
 #include <thread>
 #include <curl/curl.h>
+#include <queue>
 
 #include "../module_c/queue.hpp"
 
@@ -50,24 +51,28 @@ std::queue<std::pair<std::string, std::string>> results;  // (html, url)
 std::mutex resultsMutex;
 
 public:
-    Downloader() = default;
+    Downloader() : timestamp(getCurrentTimestamp()) {}
     explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()), stop(false) {}
     ~Downloader();
     // fetch data and create timestamp.
-    string fetch(); // const std::string& url
+    string fetch(const std::string& url); // const std::string& url
     static std::string getCurrentTimestamp();
 
     void enqueueUrl(const string& url);
     void start(int num);
     void worker();
-
-    bool hasResults() {
+    
+    // for debugging purposes
+    bool hasResults() { 
         std::lock_guard<std::mutex> lock(resultsMutex);
         return !results.empty();
     }
 
+    // for debugging purposes
     std::pair<std::string, std::string> getResult() {
         std::lock_guard<std::mutex> lock(resultsMutex);
+        if (results.empty()) return {"", ""};
+        
         auto result = results.front();
         results.pop();
         return result;

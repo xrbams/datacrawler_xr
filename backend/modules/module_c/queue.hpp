@@ -39,10 +39,10 @@ public:
         cv.notify_one();
     }
 
-    bool pop(T value){
+    bool pop(T& value){
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [this] { return !sc_queue.empty(); });  
-        value = std::move(sc_queue.front());  // Move instead of copy
+        value = sc_queue.front();
         sc_queue.pop();
         return true;
     }
