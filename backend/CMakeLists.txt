@@ -19,6 +19,7 @@ pkg_check_modules(GUMBO REQUIRED gumbo)
 #pkg_check_modules(CURL REQUIRED libcurl)
 find_package(CURL REQUIRED)
 find_package(nlohmann_json REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 include_directories(${BSONCXX_INCLUDE_DIRS} ${MONGOCXX_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${GUMBO_LIBRARY_DIRS})
 link_directories(${BSONCXX_LIBRARY_DIRS} ${MONGOCXX_LIBRARY_DIRS} ${GUMBO_LIBRARY_DIRS})
@@ -59,6 +60,8 @@ target_link_libraries(Dunna
     ${CURL_LIBRARIES} 
     ${GUMBO_LIBRARIES}
     nlohmann_json::nlohmann_json
+    OpenSSL::SSL 
+    OpenSSL::Crypto
     )
 
 # Output binary into build/bin

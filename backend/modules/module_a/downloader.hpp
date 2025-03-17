@@ -26,6 +26,12 @@ Multithreading: std::thread, std::async, or Boost.Thread.
 #include <thread>
 #include <curl/curl.h>
 #include <queue>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <cstring>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 
 #include "../module_c/queue.hpp"
 #include "../module_b/serializer.hpp"
@@ -38,6 +44,11 @@ using namespace std;
 - handling status codes
 - returning data.
 */
+#define BUFFER_SIZE 4096 
+std::string http_get(const std::string &hostname, const std::string &path);
+std::string extract_hostname(const std::string& url);
+std::string extract_path(const std::string& url);
+
 class Downloader
 {
 private:
@@ -57,7 +68,7 @@ public:
     explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()), stop(false) {}
     ~Downloader();
     // fetch data and create timestamp.
-    string fetch(const std::string& url); // const std::string& url
+    string fetch(const std::string& url); // const std::string& url  
     static std::string getCurrentTimestamp();
 
     void enqueueUrl(const string& url);
@@ -79,6 +90,9 @@ public:
         results.pop();
         return result;
     }
+
+    // Setters
+    static void setStatusCode(int code){ status_code = code; }
 
     // Getters
     std::string getUrl() const { return url; }
