@@ -1,25 +1,24 @@
-#include "modules/module_a/downloader.hpp"
-// #include "modules/module_a/metadata.hpp"
-#include "modules/module_a/parser.hpp"
-#include "modules/module_b/serializer.hpp"
+#include "./modules/module_d/scheduler.hpp"
 
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
     cout << "This is my first go at Concurrent Web Crawler" << endl;
-    string url = "https://www.databricks.com";
-    std::string hostname = extract_hostname(url); //just for http_get
-    std::string path = extract_path(url);
-    string html = http_get(hostname, path);
+
+    scheduler();
+    // string url = "https://www.databricks.com";
+    // std::string hostname = extract_hostname(url); //just for http_get
+    // std::string path = extract_path(url);
+    // string html = http_get(hostname, path);
     // cout << "HTML: " << html << endl;
 
     // Downloader d; //(url)
     // d.start(4);
 
-    // d.enqueueUrl("https://www.theseus.fi");
-    // d.enqueueUrl("https://www.kaggle.com");
-    // d.enqueueUrl("https://stackoverflow.com");
+    // d.enqueueUrl("https://www.xxl.fi");
+    // d.enqueueUrl("https://www.leetcode.com");
+    // d.enqueueUrl("https://tryhackme.com");
 
     // std::this_thread::sleep_for(std::chrono::seconds(10));
     

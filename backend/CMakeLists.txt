@@ -45,8 +45,8 @@ file(GLOB_RECURSE MODULE_HEADERS modules/h/*.h modules/h/*.hpp src/*.h src/*.hpp
 set(SOURCES 
 ${MODULE_SOURCES_A} 
 ${MODULE_SOURCES_B}
-##${MODULE_SOURCES_C} 
-#${MODULE_SOURCES_D} 
+${MODULE_SOURCES_C} 
+${MODULE_SOURCES_D} 
 ${MODULE_HEADERS} 
 main.cpp)
 

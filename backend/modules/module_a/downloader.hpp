@@ -45,7 +45,9 @@ using namespace std;
 - returning data.
 */
 #define BUFFER_SIZE 4096 
+
 std::string http_get(const std::string &hostname, const std::string &path);
+std::string http_get_robots(const std::string &hostname);
 std::string extract_hostname(const std::string& url);
 std::string extract_path(const std::string& url);
 
@@ -64,11 +66,12 @@ std::queue<std::pair<std::string, std::string>> results;  // (html, url)
 std::mutex resultsMutex;
 
 public:
-    Downloader() : timestamp(getCurrentTimestamp()) {}
+    Downloader() : timestamp(getCurrentTimestamp()), status_code(0) {}
     explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()), stop(false) {}
     ~Downloader();
     // fetch data and create timestamp.
-    string fetch(const std::string& url); // const std::string& url  
+    string fetch(const std::string& url); // const std::string& url 
+    // std::string http_get(const std::string &hostname, const std::string &path); 
     static std::string getCurrentTimestamp();
 
     void enqueueUrl(const string& url);
@@ -92,7 +95,7 @@ public:
     }
 
     // Setters
-    static void setStatusCode(int code){ status_code = code; }
+    void setStatusCode(int code){ status_code = code; }
 
     // Getters
     std::string getUrl() const { return url; }

@@ -47,7 +47,7 @@ std::string extract_path(const std::string& url) {
     }
     return "/";  // Default to root "/"
 }
-int Downloader::status_code = 0;
+// int Downloader::status_code = 0;
 
 
 std::string http_get(const std::string &hostname, const std::string &path){
@@ -60,8 +60,6 @@ std::string http_get(const std::string &hostname, const std::string &path){
     hints.ai_socktype = SOCK_STREAM; // TCP
 
     // Resolve the hostname to an IP address
-    cout << " Pulled: " << hostname.c_str() << endl;
-
     int status = getaddrinfo(hostname.c_str(), "443", &hints, &res);
     if (status != 0) {
         std::cerr << "getaddrinfo failed: " << gai_strerror(status) << std::endl;
@@ -139,14 +137,8 @@ std::string http_get(const std::string &hostname, const std::string &path){
             if (first_space != std::string::npos && second_space != std::string::npos) {
                 // Extract the status code as a string and convert to an integer
                 std::string status_code_str = status_line.substr(first_space + 1, second_space - first_space - 1);
-                try {
-                    int scode = std::stoi(status_code_str);
-                    Downloader::setStatusCode(scode);
-                    // std::cout << "Status Code: " << scode << std::endl;
-                } catch (const std::exception &e) {
-                    std::cerr << "Failed to convert status code: " << e.what() << std::endl;
-                }
-                // std::cout << "Status Code: " << scode << std::endl;
+                std::cout << "Status Code: " << status_code_str << std::endl; // lazy solution but if it works 
+           
             } else {
                 std::cerr << "Failed to parse status code" << std::endl;
             }
@@ -164,13 +156,104 @@ std::string http_get(const std::string &hostname, const std::string &path){
     return response;
 }
 
-static size_t writeCallback(void* ptr, size_t size, size_t nmemb, void* userdata){
-    size_t t_size = size * nmemb;
-    unique_ptr<string>* response = static_cast<std::unique_ptr<std::string>*>(userdata);
-    response->get()->append(static_cast<char*>(ptr), t_size); // store data
+std::string http_get_robots(const std::string &hostname){
+    struct addrinfo hints{}, *res;
+    int sockfd;
 
-    return t_size; 
+    //Zero out the hints structure
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // ipv4 AF_UNSPEC - for it to choose any
+    hints.ai_socktype = SOCK_STREAM; // TCP
+
+    // Resolve the hostname to an IP address
+    cout << " Pulled: " << hostname.c_str() << endl;
+
+    int status = getaddrinfo(hostname.c_str(), "443", &hints, &res);
+    if (status != 0) {
+        std::cerr << "getaddrinfo failed: " << gai_strerror(status) << std::endl;
+        return "";
+    }
+
+    // Create a socket
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd < 0){
+        perror("socket failed");
+        freeaddrinfo(res);
+        return "";
+    }
+
+    // Connect to the server
+    if(connect(sockfd, res->ai_addr, res->ai_addrlen) < 0){
+        perror("connect failed");
+        close(sockfd);
+        freeaddrinfo(res);
+        return "";
+    }
+
+    freeaddrinfo(res); // We dont need address info anymore
+
+    // Initialize OpenSSL
+    init_openssl();
+    SSL_CTX* ctx = create_ssl_context();
+    SSL* ssl = SSL_new(ctx);
+    SSL_set_tlsext_host_name(ssl, hostname.c_str());
+    SSL_set_fd(ssl, sockfd);
+
+    // Perform SSL handshake
+    if(SSL_connect(ssl) != 1){
+        std::cerr << "SSL connection failed \n";
+        ERR_print_errors_fp(stderr);
+        close(sockfd);
+        SSL_free(ssl);
+        SSL_CTX_free(ctx);
+        return "";
+    }
+
+    
+    // Construct a HTTP GET req
+    // Construct an HTTP GET request for the robots.txt
+    std::string request = "GET /robots.txt HTTP/1.1\r\n";
+    request += "Host: " + hostname + "\r\n";
+    request += "Connection: close\r\n";
+    request += "User-Agent: DataCrawler_XR/1.0 (Created by xrbams)\r\n\r\n";  // Optional: Add a custom User-Agent
+
+    // Send request, Alternative to send()
+    SSL_write(ssl, request.c_str(), request.length());
+
+    // Receive response
+    char buffer[BUFFER_SIZE];
+    string response;
+    ssize_t bytes_received;
+
+    // Alternative to Recv for https connections
+    while ((bytes_received = SSL_read(ssl, buffer, BUFFER_SIZE - 1)) > 0){ 
+        buffer[bytes_received] = '\0';
+        response += buffer;
+    }
+    
+    if (bytes_received < 0){
+        perror("recv failed");
+    }
+
+    {
+        // Extract the body from the response (skip headers)
+        size_t body_start = response.find("\r\n\r\n"); // Find where headers end
+        if (body_start != std::string::npos) {
+            response = response.substr(body_start + 4); // Get the content after the headers
+        }
+    }
+    
+
+    // Cleanup
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+    close(sockfd);
+    
+    return response;
+
+
 }
+
 
 // this right now gets triggered in main, 
 // but ideally we want the scheduler to handle this.
@@ -229,55 +312,6 @@ void Downloader::worker(){
     }
 }
 
-string Downloader::fetch(const std::string& url) { //
-    CURL* curl = curl_easy_init();
-
-    if(!curl) {
-        std::cerr << "Failed to initialize CURL \n"; 
-        return "";
-    }
-    auto res_data = make_unique<string>();
-
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str()); // specify URL, change it to const char*
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L); // Follow redirects for SSL/TLS handshake
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback); // collect response
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res_data);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
-
-    // int max_retries = 3;
-    // int attempts = 0;
-    // CURLcode res;
-
-    // do {
-    //     res = curl_easy_perform(curl);
-    //     if (res != CURLE_OK) {
-    //         std::cerr << "Attempt " << (attempts + 1) << " failed: " 
-    //                   << curl_easy_strerror(res) << "\n";
-    //     }
-    //     attempts++;
-    // } while (res != CURLE_OK && attempts < max_retries);
-
-    CURLcode res = curl_easy_perform(curl);
-    if (res != CURLE_OK)
-    {
-        std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
-        curl_easy_cleanup(curl);
-        return "";
-    }
-
-    //std::cout << "\nFull Response:\n" << *res_data << std::endl;
-
-    // Get HTTP status code
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
-    curl_easy_cleanup(curl);
-
-    if (status_code != 200) {
-        std::cerr << "HTTP error: " << status_code << " for " << url << "\n";
-        return "";
-    }
-
-    return *res_data;
-}
 
 string Downloader::getCurrentTimestamp() {
         auto now = std::chrono::system_clock::now();
