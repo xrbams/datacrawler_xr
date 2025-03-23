@@ -27,6 +27,8 @@
 - **CMake** (version 3.10+)
 - **Boost Libraries** (for threading and Asio)
 - **Selenium** (Optional) for advanced anti-bot handling
+- **Libcurl**
+- **Gumbo**
 
 ### 1. Clone the repository
 
