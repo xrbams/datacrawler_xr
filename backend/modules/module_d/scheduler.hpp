@@ -21,13 +21,15 @@
 #include <regex>
 
 #include "../module_a/downloader.hpp"
+#include "../module_a/metadata.hpp"
 #include "../module_a/parser.hpp"
 #include "../module_b/serializer.hpp"
+#include "../module_b/storage.hpp"
 
 // Robot parser
 class Robot{
     std::unordered_map<std::string, std::vector<std::string>> rules;
-    std::string userAgent = "*";
+    std::string userAgent = "DataCrawler_XR/1.0 (Created by xrbams)\r\n\r\n";
 
 public:
     void parser(const std::string& content);
@@ -114,4 +116,24 @@ public:
 };
 
 // Scheduler
-void scheduler();
+class Scheduler{
+    Sec_Queue<std::string> url_queue;
+    vector<thread> workers;
+    bool stop;
+
+    std::queue<std::tuple<std::string, std::string, std::string>> results;  // (html, url)
+    std::mutex resultsMutex;
+public:
+    Scheduler() = default;
+    ~Scheduler();
+    // for debugging purposes
+    bool hasResults() { 
+        std::lock_guard<std::mutex> lock(resultsMutex);
+        return !results.empty();
+    }
+    static std::string getCurrentTimestamp();
+    void enqueueUrl(const string& url);
+    void start(int num);
+    void worker();
+    void scheduler();
+};

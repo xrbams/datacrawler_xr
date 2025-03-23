@@ -22,8 +22,7 @@
 using namespace std;
 
 template <typename T>
-class Sec_Queue
-{
+class Sec_Queue{
 private:
     std::queue<T> sc_queue;
     std::mutex mtx;

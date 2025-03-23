@@ -6,7 +6,8 @@ int main(int argc, char const *argv[])
 {
     cout << "This is my first go at Concurrent Web Crawler" << endl;
 
-    scheduler();
+    Scheduler s;
+    s.scheduler();
     // string url = "https://www.databricks.com";
     // std::string hostname = extract_hostname(url); //just for http_get
     // std::string path = extract_path(url);

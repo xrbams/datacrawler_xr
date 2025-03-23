@@ -1,12 +1,6 @@
 #include "downloader.hpp"
 
-Downloader::~Downloader(){
-    stop = true;
-    for (auto & w : workers){
-        if (w.joinable()) w.join();
-    }
-    
-}
+Downloader::~Downloader(){}
 
 static void init_openssl(){
     SSL_load_error_strings();
@@ -137,7 +131,7 @@ std::string http_get(const std::string &hostname, const std::string &path){
             if (first_space != std::string::npos && second_space != std::string::npos) {
                 // Extract the status code as a string and convert to an integer
                 std::string status_code_str = status_line.substr(first_space + 1, second_space - first_space - 1);
-                std::cout << "Status Code: " << status_code_str << std::endl; // lazy solution but if it works 
+                std::cout << "url: " << hostname.c_str() << path.c_str() << " Status Code: " << status_code_str << std::endl; // lazy solution but if it works 
            
             } else {
                 std::cerr << "Failed to parse status code" << std::endl;
@@ -166,7 +160,7 @@ std::string http_get_robots(const std::string &hostname){
     hints.ai_socktype = SOCK_STREAM; // TCP
 
     // Resolve the hostname to an IP address
-    cout << " Pulled: " << hostname.c_str() << endl;
+    // cout << " Pulled: " << hostname.c_str() << endl;
 
     int status = getaddrinfo(hostname.c_str(), "443", &hints, &res);
     if (status != 0) {
@@ -210,7 +204,6 @@ std::string http_get_robots(const std::string &hostname){
     }
 
     
-    // Construct a HTTP GET req
     // Construct an HTTP GET request for the robots.txt
     std::string request = "GET /robots.txt HTTP/1.1\r\n";
     request += "Host: " + hostname + "\r\n";
@@ -252,64 +245,6 @@ std::string http_get_robots(const std::string &hostname){
     return response;
 
 
-}
-
-
-// this right now gets triggered in main, 
-// but ideally we want the scheduler to handle this.
-void Downloader::enqueueUrl(const string& url) {
-    url_queue.push(url);
-}
-
-void Downloader::start(int num){
-    for (int i = 0; i < num; ++i)
-    {
-        workers.emplace_back(&Downloader::worker, this);
-    }
-    
-}
-
-void Downloader::worker(){
-    // call storage instance
-    Database db;
-    while (!stop)
-    {
-        string url;
-        if(url_queue.pop(url)) {
-            CURL* curl = curl_easy_init();
-            if (!curl) continue;
-            std::string hostname = extract_hostname(url); //just for http_get
-            std::string path = extract_path(url);
-            std::string html = http_get(hostname, path); //fetch(url); //url
-
-            if (!html.empty()) {
-                // std::cout << "Downloaded: " << url << std::endl;
-                // 🔥 Store the result in a queue
-                std::lock_guard<std::mutex> lock(resultsMutex);
-                results.push({url, html});
-
-                Content content = Parser::parse_content(html, url);
-
-                auto header = std::make_unique<Header>("text/html", html.length());
-                auto crawl = std::make_unique<CrawlMetadata>(0, url, getCurrentTimestamp());
-                Metadata meta(std::move(header), std::make_unique<Content>(content), std::move(crawl));
-
-                json jsonData = serializer::serialize(meta);
-                db.saveData(jsonData);
-
-                // 🔥 Save extracted links to MongoDB and enqueue them
-                for (const std::string& link : content.links) {
-                    db.saveLink(link, url);  // Store link in MongoDB
-                    url_queue.push(link);    // Add link to queue for crawling
-                }
-
-            }else {
-                std::cerr << "Failed to download: " << url << std::endl;
-            }
-
-
-        }
-    }
 }
 
 

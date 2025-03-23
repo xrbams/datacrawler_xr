@@ -8,11 +8,8 @@
 - downloads webpages from URLs
 - Parse HTML
 - send extracted links to module_c
-- handles robot.txt and site-specific rate limits
 
 Networking: libcurl or Boost.Asio (asynchronous networking).
-Parsing: Gumbo, libxml2, or HTML Tidy.
-Multithreading: std::thread, std::async, or Boost.Thread.
 
 */
 // include libraries
@@ -26,6 +23,7 @@ Multithreading: std::thread, std::async, or Boost.Thread.
 #include <thread>
 #include <curl/curl.h>
 #include <queue>
+#include <tuple>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -51,48 +49,28 @@ std::string http_get_robots(const std::string &hostname);
 std::string extract_hostname(const std::string& url);
 std::string extract_path(const std::string& url);
 
-class Downloader
-{
+class Downloader{
 private:
-std::string url = "";
-int status_code;
-std::string timestamp; 
-
-Sec_Queue<std::string> url_queue;
-vector<thread> workers;
-bool stop;
-
-std::queue<std::pair<std::string, std::string>> results;  // (html, url)
-std::mutex resultsMutex;
+    std::string url = "";
+    int status_code;
+    std::string timestamp; 
 
 public:
     Downloader() : timestamp(getCurrentTimestamp()), status_code(0) {}
-    explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()), stop(false) {}
+    explicit Downloader(const std::string& url) : url(url), status_code(0), timestamp(getCurrentTimestamp()){}
     ~Downloader();
     // fetch data and create timestamp.
-    string fetch(const std::string& url); // const std::string& url 
-    // std::string http_get(const std::string &hostname, const std::string &path); 
     static std::string getCurrentTimestamp();
 
-    void enqueueUrl(const string& url);
-    void start(int num);
-    void worker();
-
     // for debugging purposes
-    bool hasResults() { 
-        std::lock_guard<std::mutex> lock(resultsMutex);
-        return !results.empty();
-    }
-
-    // for debugging purposes
-    std::pair<std::string, std::string> getResult() {
-        std::lock_guard<std::mutex> lock(resultsMutex);
-        if (results.empty()) return {"", ""};
+    // std::pair<std::string, std::string> getResult() {
+    //     std::lock_guard<std::mutex> lock(resultsMutex);
+    //     if (results.empty()) return {"", ""};
         
-        auto result = results.front();
-        results.pop();
-        return result;
-    }
+    //     auto result = results.front();
+    //     results.pop();
+    //     return result;
+    // }
 
     // Setters
     void setStatusCode(int code){ status_code = code; }
