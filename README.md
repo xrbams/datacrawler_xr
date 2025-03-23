@@ -1,37 +1,101 @@
-# DataCrawler_XR
+**DataCrawler_XR**
+==================
 
-**DataCrawler_XR** is a high-performance, concurrent web crawler designed to scrape, process, and analyze data at scale. The project leverages modern networking and concurrency techniques to efficiently collect and manage data from various websites. It supports distributed crawling, asynchronous I/O, and advanced data extraction with the goal of gathering valuable insights from web content.
+**DataCrawler_XR** is a high-performance, concurrent web crawler in C++ designed for efficient web scraping and data extraction.
 
-## Main Features
+**Key Features**
+----------------
 
-- **Concurrent Crawling**: Efficiently scrape multiple pages simultaneously using asynchronous I/O and multi-threading.
-- **Distributed Architecture**: Scalable design to distribute the crawling process across multiple machines using message queues.
-- **Data Extraction**: Extract and process useful data from webpages, with potential integration for Natural Language Processing (NLP) tasks.
-- **Anti-Bot Handling**: Implement mechanisms to bypass common bot detection strategies (e.g., CAPTCHA) using browser automation.
-- **Extensible and Configurable**: Easily add custom scraping rules or modify crawler behavior via configuration files.
+-   **Multi-threaded Crawling**: Concurrent fetching of pages using C++ threads.
 
-## Technologies Used
+-   **Rate Limiting**: Implemented using token bucket to throttle requests.
 
-- **C++**: Core language for implementing the crawler.
-- **Boost.Asio**: For asynchronous I/O operations.
-- **CMake**: Build system to configure and compile the project.
-- **Threading and Concurrency**: Multi-threading for concurrent requests and data processing.
-- **Message Queues (Optional)**: For distributed crawling (using technologies like Apache Kafka or RabbitMQ).
-- **Selenium**: (Optional) For bypassing bot detection with automated browser control.
+-   **HTML Parsing**: Uses **Gumbo** to extract data from raw HTML.
 
-## Setup Instructions
+-   **Robots.txt Handling**: Automatically checks for crawl restrictions.
+
+-   **Customizable Parsing**: Extendable to add custom scraping logic.
+
+-   **Distributed Crawling (Optional)**: Scalable using message queues (e.g., RabbitMQ).
+
+**Technologies Used**
+---------------------
+
+-   **C++17**: For performance-critical components.
+
+-   **libcurl**: Non-blocking HTTP requests.
+
+-   **Gumbo**: HTML5 parser for extracting content.
+
+-   **Threading**: Native C++ threads for concurrency.
+
+-   **CMake**: Build system.
+
+**Setup**
+---------
 
 ### Prerequisites
 
-- **C++17 or higher** compiler (e.g., GCC, Clang, MSVC)
-- **CMake** (version 3.10+)
-- **Boost Libraries** (for threading and Asio)
-- **Selenium** (Optional) for advanced anti-bot handling
-- **Libcurl**
-- **Gumbo**
+-   C++17+ compiler (e.g., GCC, Clang)
 
-### 1. Clone the repository
+-   **CMake** (3.10+)
 
-```bash
-git clone https://github.com/xrbams/datacrawler_xr.git
-cd datacrawler_xr
+-   **libcurl**
+
+-   **Gumbo**
+
+### Steps
+
+1.  **Clone the Repository**
+
+    bash
+
+    CopyEdit
+
+    `git clone https://github.com/xrbams/datacrawler_xr.git
+    cd datacrawler_xr`
+
+2.  **Install Dependencies**
+
+    bash
+
+    CopyEdit
+
+    `sudo apt-get install libcurl4-openssl-dev libgumbo-dev`
+
+3.  **Build the Project**
+
+    bash
+
+    CopyEdit
+
+    `mkdir build
+    cd build
+    cmake ..
+    make`
+
+4.  **Run the Crawler**
+
+    bash
+
+    CopyEdit
+
+    `./datacrawler_xr`
+
+**Core Components**
+-------------------
+
+-   **Crawler**: Manages thread pool and URL queue. Controls rate limits and depth.
+
+-   **Downloader**: Uses **libcurl** for fetching pages asynchronously.
+
+-   **Parser**: Uses **Gumbo** to parse HTML and extract links or data.
+
+-   **Robots.txt Parser**: Checks if URLs are allowed to be crawled.
+
+**Customization**
+-----------------
+
+-   Modify the `Parser` module for custom data extraction.
+
+-   Set up distributed crawling by configuring message queues like RabbitMQ.
