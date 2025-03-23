@@ -1,5 +1,9 @@
 #include "scheduler.hpp"
 
+std::unordered_map<std::string, std::pair<std::string, std::chrono::system_clock::time_point>> robotsCache;
+const std::chrono::hours ROBOT_CACHE_DURATION(24);
+std::unordered_map<std::string, Robot> robotParsers;
+
 Scheduler::~Scheduler(){
     stop = true;
     for (auto & w : workers){
@@ -81,12 +85,36 @@ string Scheduler::getCurrentTimestamp() {
 }
 
 
+
+std::string getRobotsTxt(const std::string& hostname){
+    auto now = std::chrono::system_clock::now();
+
+    // Check Cache
+    if(robotsCache.find(hostname) != robotsCache.end()){
+        auto& [cachedTxt, timestamp] = robotsCache[hostname];
+        if(now - timestamp < ROBOT_CACHE_DURATION){
+            return cachedTxt;
+        }
+    }
+    std::string robotxt = http_get_robots(hostname);
+    robotsCache[hostname] = {robotxt, now};
+    return robotxt;
+}
+
+Robot& getRobotForHost(const std::string& hostname, const std::string& robotxt){
+    if(robotParsers.find(hostname) == robotParsers.end()){
+        Robot r;
+        r.parser(robotxt);
+        robotParsers[hostname] = r;
+    }
+    return robotParsers[hostname];
+}
+
 void Scheduler::worker(){
     // call storage instance
-    // Database db;
-    Robot robo;
-    TokenBucket limit(6);
-    DepthTracker tracker(6);
+    Database db;
+    TokenBucket limit(5);
+    DepthTracker tracker(5);
     while (!stop)
     {
         string url;
@@ -95,19 +123,19 @@ void Scheduler::worker(){
             if (!curl) continue;
             std::string hostname = extract_hostname(url); //just for http_get
             std::string path = extract_path(url);
-            std::string robotxt = http_get_robots(hostname);
+            std::string robotxt = getRobotsTxt(hostname);
             std::string html;
 
             if(!robotxt.empty()){
-                robo.parser(robotxt);
+                Robot& robo = getRobotForHost(hostname, robotxt);
                 if(!robo.isAllowed(url)){
                     cout << "Blocked by robots: " << url << endl;
                     // continue;
                 }
 
-                if(!tracker.canCrawl(hostname + path)){
-                    std::cout << "Checking URL: " << hostname + path << " Depth: " << tracker.getDepth(hostname + path) << std::endl;
-                    // continue;
+                if (!tracker.canCrawl(hostname + path)) {
+                    std::cout << "Max depth reached: " << hostname + path << " Depth: " << tracker.getDepth(hostname + path) << std::endl;
+                    continue;
                 }
 
                 // Rate limiting
@@ -115,14 +143,8 @@ void Scheduler::worker(){
 
                 // Download the good urls
                 html = http_get(hostname, path); // url: and status code come from here
-            }
-            
-        
-            if (!html.empty()) {
-                // std::cout << "Downloaded: " << url << std::endl;
-                // 🔥 Store the result in a queue
-                // std::lock_guard<std::mutex> lock(resultsMutex);
-                // results.push((url, html));
+
+                if (!html.empty() && tracker.canCrawl(hostname + path)) {
 
                 Content content = Parser::parse_content(html, url);
 
@@ -131,13 +153,13 @@ void Scheduler::worker(){
                 Metadata meta(std::move(header), std::make_unique<Content>(content), std::move(crawl));
 
                 // Save to JSON send to db.
-                // json jsonData = serializer::serialize(meta);
-                // db.saveData(jsonData);
+                json jsonData = serializer::serialize(meta);
+                db.saveData(jsonData);
 
                 // 🔥 Save extracted links to MongoDB and enqueue them
                 
                 for (const std::string& link : content.links) {
-                    // db.saveLink(link, url);  // Store link in MongoDB
+                    db.saveLink(link, url);  // Store link in MongoDB
                     // std::cout << "Links: " << link << std::endl;
                     url_queue.push(link);    // Add link to queue for crawling
                 }
@@ -145,8 +167,7 @@ void Scheduler::worker(){
             }else {
                 std::cerr << "Failed to download: " << url << std::endl;
             }
-
-
+            }
         }
     }
 }
@@ -154,8 +175,11 @@ void Scheduler::worker(){
 // Scheduler
 void Scheduler::scheduler(){
     
-    Downloader d;
-    start(7);
+    int numWorkers = std::thread::hardware_concurrency();
+    if (numWorkers == 0) {
+        numWorkers = 1;  // Fallback to at least 1 worker if the system cannot determine the number of cores
+    }
+    start(numWorkers);
 
     enqueueUrl("https://www.janestreet.com");
     enqueueUrl("https://leetcode.com/");
@@ -165,18 +189,5 @@ void Scheduler::scheduler(){
     enqueueUrl("https://www.youtube.com");
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
-
-    // std::vector<std::string> links = {
-    //     "https://www.janestreet.com/welcome-guide/",
-    //     "https://www.janestreet.com/bonus-problems/",
-    //     "https://www.janestreet.com/apply-quantitative-researcher/",
-    //     "https://www.janestreet.com/watch?v=dQw4w9WgXcQ/wabo/erfg/wsdf",
-    //     "https://www.janestreet.com/results?search_query=robotics"
-    // };
-
-    // std::string url = "https://www.janestreet.com";
-    // std::string hostname = extract_hostname(url);
-
-    // std::string robotxt = http_get_robots(hostname);
 
 }

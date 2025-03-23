@@ -132,6 +132,7 @@ std::string http_get(const std::string &hostname, const std::string &path){
                 // Extract the status code as a string and convert to an integer
                 std::string status_code_str = status_line.substr(first_space + 1, second_space - first_space - 1);
                 std::cout << "url: " << hostname.c_str() << path.c_str() << " Status Code: " << status_code_str << std::endl; // lazy solution but if it works 
+                
            
             } else {
                 std::cerr << "Failed to parse status code" << std::endl;

@@ -26,6 +26,10 @@
 #include "../module_b/serializer.hpp"
 #include "../module_b/storage.hpp"
 
+extern std::unordered_map<std::string, std::pair<std::string, std::chrono::system_clock::time_point>> robotsCache;
+extern const std::chrono::hours ROBOT_CACHE_DURATION;
+std::string getRobotsTxt(const std::string& hostname);
+
 // Robot parser
 class Robot{
     std::unordered_map<std::string, std::vector<std::string>> rules;
@@ -36,6 +40,9 @@ public:
     bool isAllowed(const std::string& url) const;
 
 };
+
+extern std::unordered_map<std::string, Robot> robotParsers;
+Robot& getRobotForHost(const std::string& hostname, const std::string& robotxt);
 
 // Token Buckett Rate limiter
 class TokenBucket{
@@ -79,14 +86,14 @@ class DepthTracker{
     int maxDepth;
 
 public:
-    DepthTracker(int max) : maxDepth(maxDepth){}
+    DepthTracker(int max) : maxDepth(max){}
     bool canCrawl(const std::string &url){
         if (urlDepth.find(url) == urlDepth.end()) {
             urlDepth[url] = 0;  // Initialize new URL with depth 0
         }
         int curr = urlDepth[url];
         if(curr >= maxDepth) return false;
-        urlDepth[url] = curr++;
+        urlDepth[url] = curr + 1;
         return true;
     }
 
@@ -123,6 +130,11 @@ class Scheduler{
 
     std::queue<std::tuple<std::string, std::string, std::string>> results;  // (html, url)
     std::mutex resultsMutex;
+
+    // std::unordered_map<std::string, std::pair<std::string, std::chrono::system_clock::time_point>> robotsCache;
+    // const std::chrono::hours ROBOT_CACHE_DURATION(24);
+    // std::unordered_map<std::string, Robot> robotParsers;
+
 public:
     Scheduler() = default;
     ~Scheduler();

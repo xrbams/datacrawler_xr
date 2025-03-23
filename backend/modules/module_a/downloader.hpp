@@ -62,16 +62,6 @@ public:
     // fetch data and create timestamp.
     static std::string getCurrentTimestamp();
 
-    // for debugging purposes
-    // std::pair<std::string, std::string> getResult() {
-    //     std::lock_guard<std::mutex> lock(resultsMutex);
-    //     if (results.empty()) return {"", ""};
-        
-    //     auto result = results.front();
-    //     results.pop();
-    //     return result;
-    // }
-
     // Setters
     void setStatusCode(int code){ status_code = code; }
 
